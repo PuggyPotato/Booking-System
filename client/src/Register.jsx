@@ -12,10 +12,27 @@ function Register(){
         navigate("/")
     }
 
-    function registerUser(){
-
+    const registerUser = async () =>{
+        try{
+            const response = await fetch("http://localhost:8080/register",{
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json",
+                },
+                body: JSON.stringify({username,password})
+            });
+            if(!response.ok){
+                const errorText = response.text();
+                console.log("Backend Error:",errorText);
+            }
+            const result = await response.json();
+            console.log(result);
+            navigate("/Home");
+        }
+        catch(err){
+            console.log("Error Sending Data:",err)
+        }
     }
-
     return(
         <>
             <div id="registerContainer">
