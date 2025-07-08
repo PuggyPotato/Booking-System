@@ -12,7 +12,7 @@ body{
 
 }
 
-#loginContainer{
+#loginContainer,#registerContainer{
   display: flex;
   flex-direction: column;
   border: 2px solid black;
@@ -21,8 +21,64 @@ body{
   width: 50vw;
   justify-content: center;
   align-items: center;
+  flex-wrap: 1;
 }
 
 .label{
   font-size: large;
+}
+
+#authNav{
+  display:flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: space-between;
+  margin-top: auto;
+  width: 100%;
+}
+
+#credentials{
+  align-self: center;
+  justify-self: center;
+  margin-top: auto;
+}
+
+#loginButton,#registerButton{
+  margin-bottom: 2em;
+  margin-right: 2em;
+  padding: 2em;
+  padding-right: 3em;
+  padding-left: 3em;
+}
+
+#navRegister,#navLogin{
+  margin-bottom: 2em;
+  margin-left:2em;
+  padding-right: 3em;
+  padding-left: 3em;
+}
+
+#loginButton,#navRegister,#registerButton,#navLogin{
+  border-radius: 10%;
+}
+
+#loginHeader,#registerHeader{
+  font-size: clamp(2rem,2vw,4rem)
+}
+
+.label{
+  font-size: xx-large;
+  margin-right: 0;
+}
+
+
+#usernameInput,#passwordInput{
+  width: 15em;
+  margin: 1em;
+  margin-left: 0.5em;
+  text-align: left;
+  font-size: xx-large;
+  padding-top: 0.5em;
+  padding-bottom:0.5em;
+  border-radius: 3%;
 }

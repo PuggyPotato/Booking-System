@@ -21,18 +21,20 @@ function Login(){
     return(
         <>
             <div id="loginContainer">
-                <h1>Login</h1>
-                <div>
-                    <label id="usernameLoginLabel" className="label">Username:</label>
-                    <input value={username} onChange={(e) => setUsername(e.target.value)}/>
+                <h1 id="loginHeader">Login</h1>
+                <div id="credentials">
+                    <div>
+                        <label id="usernameLoginLabel" className="label">Username:</label>
+                        <input value={username} onChange={(e) => setUsername(e.target.value)} id="usernameInput"/>
+                    </div>
+                    <div>
+                        <label id="passwordLoginLabel" className="label">Password:</label>
+                        <input value={password} onChange={(e) =>setPassword(e.target.value)} id="passwordInput"/>
+                    </div>
                 </div>
-                <div>
-                    <label id="passwordLoginLabel" className="label">Password:</label>
-                    <input value={password} onChange={(e) =>setPassword(e.target.value)}/>
-                </div>
-                <div>
-                    <button onClick={navToRegister}>Back To Register</button>
-                    <button onClick={loginUser}>Login</button>
+                <div id="authNav">
+                    <button onClick={navToRegister} id="navRegister">Back To Register</button>
+                    <button onClick={loginUser} id="loginButton">Login</button>
                 </div>
 
             </div>
