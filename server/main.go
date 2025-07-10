@@ -1,11 +1,12 @@
 package main
 
 import (
-
-	"net/http"
-	"encoding/json"
-	"log"
 	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -19,10 +20,66 @@ type UserAuth struct{
 }
 
 func main(){
-	
+	var dbpass = os.Getenv("POSTGRESPASS")
+	var err error
+	var connectionStr string = fmt.Sprintf("postgres://postgres:%v@localhost:5432/booking",dbpass)
+	conn,err = pgx.Connect(context.Background(),connectionStr)
+
+	if err !=nil{
+		log.Fatal("Unable To Connect To The Database:",err)
+	}
+	defer conn.Close(context.Background())
+	fmt.Println("Connected To PostgresSQL.")
+	fmt.Println("Server is running on localhost:8080")
+
+	//Routes
+	http.HandleFunc("/register",withCORS(handleRegister))
+	http.HandleFunc("/login",withCORS(handleLogin))
+
+	//Start http server
+	log.Fatal(http.ListenAndServe(":8080",nil))
 }
 
-func handleRegister(){
+func handleRegister(w http.ResponseWriter,r *http.Request){
+	log.Println("HandleRegister called.")
+
+	if r.Method != http.MethodPost{
+		http.Error(w,"Bad JSON",http.StatusMethodNotAllowed)
+		return
+	}
+
+	var user UserAuth
+	if err := json.NewDecoder(r.Body).Decode(&user);err != nil{
+		http.Error(w,"Bad JSON",http.StatusBadRequest)
+		return
+	}
+
+	log.Println("Received user:",user)
+
+	var exists bool 
+	query := "SELECT EXISTS (SELECT 1 FROM public.users WHERE name = $1)"
+	err := conn.QueryRow(context.Background(),query,user.Username).Scan(&exists)
+
+	if err != nil{
+		http.Error(w,"User already Exist",http.StatusConflict)
+		return
+	}
+
+	//Saving To PostGresDB
+	_,err = conn.Exec(
+		context.Background(),
+		"INSERT INTO public.users(username,password) VALUES ($1,$2)",
+		user.Username,user.Password,
+	)
+	if err !=nil{
+		log.Println("Error saving to DB:",err)
+		http.Error(w,"Failed To Save User",http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]string{"message":"User Received!",}
+	w.Header().Set("Content-Type","application/json")
+	json.NewEncoder(w).Encode(response)
 
 }
 
