@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-
+	"github.com/joho/godotenv"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -15,13 +15,16 @@ var users = make(map[string]string)
 var conn *pgx.Conn
 
 type UserAuth struct{
-	Username string `json:"name"`
+	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
 func main(){
-	var dbpass = os.Getenv("POSTGRESPASS")
+
+	_ = godotenv.Load()
+	var dbpass = os.Getenv("PASS")
 	var err error
+	log.Println("Password",dbpass)
 	var connectionStr string = fmt.Sprintf("postgres://postgres:%v@localhost:5432/booking",dbpass)
 	conn,err = pgx.Connect(context.Background(),connectionStr)
 
@@ -57,7 +60,7 @@ func handleRegister(w http.ResponseWriter,r *http.Request){
 	log.Println("Received user:",user)
 
 	var exists bool 
-	query := "SELECT EXISTS (SELECT 1 FROM public.users WHERE name = $1)"
+	query := "SELECT EXISTS (SELECT 1 FROM public.users WHERE username = $1)"
 	err := conn.QueryRow(context.Background(),query,user.Username).Scan(&exists)
 
 	if err != nil{
@@ -99,7 +102,7 @@ func handleLogin(w http.ResponseWriter,r *http.Request){
 	log.Println("Login Attempt:",user)
 
 	var storedPassword string
-	query := "SELECT password FROM public.users WHERE name = $1"
+	query := "SELECT password FROM public.users WHERE username = $1"
 	err:= conn.QueryRow(context.Background(),query,user.Username).Scan(&storedPassword)
 
 	log.Printf("Raw Input: Name='%v',Password='%v'",user.Username,user.Password)
@@ -125,8 +128,8 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc{
 	return func(w http.ResponseWriter,r * http.Request){
 		//Allow all origin for cors
 		w.Header().Set("Access-Control-Allow-Origin","*")
-		w.Header().Set("Access-Control-Allow-Origin","Content-Type")
-		w.Header().Set("Access-Control-Allow-Origin","POST,GET,OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers","Content-Type")
+		w.Header().Set("Access-Control-Allow-Method","POST, GET, OPTIONS")
 
 		if r.Method == "OPTIONS"{
 		w.WriteHeader(http.StatusOK)
