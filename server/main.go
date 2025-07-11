@@ -7,11 +7,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"github.com/joho/godotenv"
-	"github.com/jackc/pgx/v5"
-	"golang.org/x/crypto/bcrypt"
-	"github.com/golang-jwt/jwt/v5"
+	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var users = make(map[string]string)
@@ -40,6 +42,7 @@ func main(){
 	//Routes
 	http.HandleFunc("/register",withCORS(handleRegister))
 	http.HandleFunc("/login",withCORS(handleLogin))
+	http.HandleFunc("/appointment",withCORS(bookAppointment))
 
 	//Start http server
 	log.Fatal(http.ListenAndServe(":8080",nil))
@@ -150,7 +153,7 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc{
 	return func(w http.ResponseWriter,r * http.Request){
 		//Allow all origin for cors
 		w.Header().Set("Access-Control-Allow-Origin","*")
-		w.Header().Set("Access-Control-Allow-Headers","Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers","Content-Type,Authorization")
 		w.Header().Set("Access-Control-Allow-Method","POST, GET, OPTIONS")
 
 		if r.Method == "OPTIONS"{
@@ -170,3 +173,75 @@ func generateJWT(username string) (string,error){
 	})
 	return token.SignedString(jwtSecret)
 }
+
+func bookAppointment(w http.ResponseWriter,r * http.Request){
+	if r.Method != http.MethodPost{
+		http.Error(w,"Only Post Allowed",http.StatusMethodNotAllowed)
+		return
+	}
+
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == ""{
+		http.Error(w,"Missing Authorization Header",http.StatusUnauthorized)
+		return
+	}
+
+	tokenString := strings.TrimPrefix(authHeader,"Bearer ")
+	username,err := validateJWT(tokenString)
+	if err!=nil{
+		http.Error(w,"Invalid Token",http.StatusUnauthorized)
+		return
+	}
+
+	//Parse Request Body
+	var payload struct{
+		Date string `json:"date"`
+		Time string `json:"time"`
+		Reason string `json:"reason"`
+	}
+
+	if err:= json.NewDecoder(r.Body).Decode(&payload); err!=nil{
+		http.Error(w,"Invalid JSON",http.StatusBadRequest)
+		return
+	}
+
+	//Validate Input
+	if payload.Date == "" || payload.Time == "" || payload.Reason == ""{
+		http.Error(w,"Missing Fields",http.StatusBadRequest)
+		return
+	}
+
+	//Save Appointment
+	_,err = conn.Exec(
+		context.Background(),
+		"INSERT INTO appointments (username,date,time,reason) VALUES ($1,$2,$3,$4)",
+		username, payload.Date,payload.Time,payload.Reason,
+	)
+
+	if err !=nil{
+		log.Println("DB Insert Error:",err)
+		http.Error(w,"Database Error",http.StatusInternalServerError)
+		return
+	}
+
+	//Respond With Success
+	w.Header().Set("Content-Type","application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":"Appointment booked.",
+	})
+}
+
+func validateJWT(tokenString string) (string,error){
+	secret := os.Getenv("SECRET")
+	token,err := jwt.Parse(tokenString,func (token * jwt.Token)(interface{},error){
+		return []byte(secret),nil
+	})
+
+	if claims,ok := token.Claims.(jwt.MapClaims); ok && token.Valid{
+		username := claims["username"].(string)
+		return username,nil
+	}
+
+	return "",err
+}
+

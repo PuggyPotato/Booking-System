@@ -4,6 +4,7 @@ import {BrowserRouter,Routes,Route} from "react-router-dom"
 import Login from './Login'
 import Register from './Register'
 import Home from './Home'
+import Appointment from './Appointment'
 
 function App() {
 
@@ -14,6 +15,7 @@ function App() {
           <Route path='/' element={<Login/>}></Route>
           <Route path='/Register' element={<Register/>}></Route>
           <Route path="/Home" element={<Home/>}></Route>
+          <Route path="/Appointment" element={<Appointment/>}></Route>
         </Routes>
       </BrowserRouter>
     </>

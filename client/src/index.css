@@ -84,7 +84,7 @@ body{
 }
 
 
-#homeContainer,#appointment,#walkIn{
+#homeContainer,#appointment,#walkIn,#appointmentContainer{
   font-size: clamp(1rem, 2vw, 2rem);
 }
 
@@ -110,6 +110,7 @@ body{
   position: absolute;
   left: 0;
   top: 0;
+  background-color: aqua;
 }
 
 #home{
@@ -119,6 +120,7 @@ body{
   padding: 1rem;
   padding-left: 2rem;
   padding-right: 2rem;
+  border-radius: 10%;
 }
 
 #logOut{
@@ -128,6 +130,59 @@ body{
   padding: 1rem;
   padding-left: 2rem;
   padding-right: 2rem;
+  border-radius: 10%;
 }
 
 
+#appointmentContainer {
+  max-width: 400px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 1rem;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  font-family: sans-serif;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: bold;
+  color: #444;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ccc;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submit-btn:hover {
+  background-color: #0056b3;
+}

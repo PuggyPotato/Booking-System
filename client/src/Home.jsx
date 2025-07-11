@@ -10,6 +10,7 @@ function Home(){
     const [username,setUsername] = useState("Guest");
     const [loggedIn,setLoggedIn] = useState(false);
 
+
     const navigate = useNavigate();
     useEffect(() =>{
         const token = localStorage.getItem("token");
@@ -35,13 +36,8 @@ function Home(){
         navigate("/");
     }
 
-    function appointment(){
 
-    }
 
-    function walkIn(){
-
-    }
 
     return(
         <>
@@ -52,8 +48,7 @@ function Home(){
                 </div>
                 <div id="homeContainer">
                     <h1>Welcome {username}</h1>
-                    <button id="appointment" onClick={() =>appointment()}>Make An Appointment</button>
-                    <button id="walkIn" onClick={() =>walkIn()}>Walk In</button>
+                    <button id="appointment" onClick={() =>navigate("/Appointment")}>Make An Appointment</button>
                 </div>
             </div>
         </>
