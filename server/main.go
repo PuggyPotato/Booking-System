@@ -9,6 +9,8 @@ import (
 	"os"
 	"github.com/joho/godotenv"
 	"github.com/jackc/pgx/v5"
+	"golang.org/x/crypto/bcrypt"
+
 )
 
 var users = make(map[string]string)
@@ -68,11 +70,18 @@ func handleRegister(w http.ResponseWriter,r *http.Request){
 		return
 	}
 
+	//Encrypt password
+	hashedPassword,err := bcrypt.GenerateFromPassword([]byte(user.Password),bcrypt.DefaultCost )
+	if err !=nil{
+		log.Println("Password hash Error:",err)
+		http.Error(w,"Failed To Hash Password:",http.StatusInternalServerError)
+		return
+	}
 	//Saving To PostGresDB
 	_,err = conn.Exec(
 		context.Background(),
 		"INSERT INTO public.users(username,password) VALUES ($1,$2)",
-		user.Username,user.Password,
+		user.Username,string(hashedPassword),
 	)
 	if err !=nil{
 		log.Println("Error saving to DB:",err)
@@ -112,9 +121,10 @@ func handleLogin(w http.ResponseWriter,r *http.Request){
 		http.Error(w,"Invalid Username Or Password",http.StatusUnauthorized)
 	}
 
-	//Check If Password Match
-	if user.Password != storedPassword{
-		http.Error(w,"Invalid username or password",http.StatusUnauthorized)
+	//Turn password To Hashed and check if password match
+	err = bcrypt.CompareHashAndPassword([]byte(storedPassword),[]byte(user.Password))
+	if err !=nil{
+		http.Error(w,"Invalid Username Or Password",http.StatusUnauthorized)
 		return
 	}
 
