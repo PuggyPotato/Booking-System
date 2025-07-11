@@ -43,6 +43,8 @@ func main(){
 	http.HandleFunc("/register",withCORS(handleRegister))
 	http.HandleFunc("/login",withCORS(handleLogin))
 	http.HandleFunc("/appointment",withCORS(bookAppointment))
+	http.HandleFunc("/adminAppointments",withCORS(admin))
+	http.HandleFunc("/adminLogin",withCORS(adminLogin))
 
 	//Start http server
 	log.Fatal(http.ListenAndServe(":8080",nil))
@@ -245,3 +247,97 @@ func validateJWT(tokenString string) (string,error){
 	return "",err
 }
 
+func admin(w http.ResponseWriter,r *http.Request){
+	if r.Method != http.MethodGet{
+		http.Error(w,"Only Get Allowed",http.StatusMethodNotAllowed)
+		return
+	}
+
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == ""{
+		http.Error(w,"Missing Authorization Header",http.StatusUnauthorized)
+		return
+	}
+
+	tokenString:=strings.TrimPrefix(authHeader, "Bearer ")
+	username,err := validateJWT(tokenString)
+	if err !=nil{
+		http.Error(w,"Invalid Token",http.StatusUnauthorized)
+		return
+	}
+
+	//Restrict To Admin Only
+	if username != "potato"{
+		http.Error(w,"Unauthorized",http.StatusForbidden)
+		return
+	}
+
+	//Query all appointment
+	rows,err := conn.Query(context.Background(),"SELECT username,date,time,reason FROM appointments")
+	if err !=nil{
+		log.Println("DB Query Error:",err)
+		http.Error(w,"Database Error",http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var appointments []map[string]string
+
+	for rows.Next(){
+		var user, timeStr,reason string
+		var date time.Time
+
+		if err :=rows.Scan(&user,&date,&timeStr,&reason);err !=nil{
+			log.Println("Row scan Error",err)
+			continue
+		}
+		appointments = append(appointments,map[string]string{
+			"username":user,
+			"date":date.Format("2006-01-02"),
+			"time":timeStr,
+			"reason":reason,
+		})
+	}
+	w.Header().Set("Content-Type","application/json")
+	json.NewEncoder(w).Encode(appointments)
+}
+
+func adminLogin(w http.ResponseWriter,r * http.Request){
+	log.Println("adminLogin called.")
+
+
+	if r.Method != http.MethodPost{
+		http.Error(w,"BAD JSON",http.StatusMethodNotAllowed)
+		return
+	}
+
+	var creds UserAuth
+	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
+		http.Error(w, "Bad JSON", http.StatusBadRequest)
+		return
+	}
+
+	//Getting Admin Password
+	adminUsername := os.Getenv("ADMIN")
+	adminPassword := os.Getenv("ADMINPASS")
+
+	//Check Credentials
+	if creds.Username != adminUsername || creds.Password !=adminPassword{
+		log.Printf("Invalid admin login attempt: username=%s",creds.Username)
+		http.Error(w,"Unauthorised",http.StatusUnauthorized)
+		return
+	}
+
+	token,err := generateJWT(creds.Username)
+	if err !=nil{
+		log.Println("Token generation error:",err)
+		http.Error(w,"Internal server error",http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type","application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":"Login Succesful",
+		"token":token,
+	})
+}

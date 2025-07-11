@@ -32,7 +32,7 @@ function Appointment(){
         alert(data.message)
     }
 
-
+    
 
     return(
         <>
