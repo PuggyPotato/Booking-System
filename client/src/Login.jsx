@@ -18,7 +18,7 @@ function Login(){
             const response = await fetch("http://localhost:8080/login",{
                 method:"POST",
                 headers:{
-                    "Content-Type":"application/json"
+                    "Content-Type":"application/json",
                 },
                 body:JSON.stringify({username,password})
             });
@@ -29,6 +29,7 @@ function Login(){
             }
             const result = await response.json();
             console.log(result);
+            localStorage.setItem("token",result.token)
             navigate("/Home");
         }
         catch(err){

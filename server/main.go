@@ -10,7 +10,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
-
+	"github.com/golang-jwt/jwt/v5"
+	"time"
 )
 
 var users = make(map[string]string)
@@ -26,7 +27,6 @@ func main(){
 	_ = godotenv.Load()
 	var dbpass = os.Getenv("PASS")
 	var err error
-	log.Println("Password",dbpass)
 	var connectionStr string = fmt.Sprintf("postgres://postgres:%v@localhost:5432/booking",dbpass)
 	conn,err = pgx.Connect(context.Background(),connectionStr)
 
@@ -45,6 +45,7 @@ func main(){
 	log.Fatal(http.ListenAndServe(":8080",nil))
 }
 
+//Handle Register
 func handleRegister(w http.ResponseWriter,r *http.Request){
 	log.Println("HandleRegister called.")
 
@@ -95,8 +96,11 @@ func handleRegister(w http.ResponseWriter,r *http.Request){
 
 }
 
+
+//Handle Login
 func handleLogin(w http.ResponseWriter,r *http.Request){
 	log.Println("handleLogin called.")
+
 
 	if r.Method != http.MethodPost{
 		http.Error(w,"BAD JSON",http.StatusMethodNotAllowed)
@@ -128,10 +132,18 @@ func handleLogin(w http.ResponseWriter,r *http.Request){
 		return
 	}
 
-	//Success
-	response := map[string]string{"message":"Login Succesful"}
+	token,err := generateJWT(user.Username)
+	if err !=nil{
+		log.Println("Token generation error:",err)
+		http.Error(w,"Internal server error",http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type","application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":"Login Succesful",
+		"token":token,
+	})
 }
 
 func withCORS(h http.HandlerFunc) http.HandlerFunc{
@@ -147,4 +159,14 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc{
 		}
 		h(w,r)
 	}
+}
+
+func generateJWT(username string) (string,error){
+	var secretKey = os.Getenv("SECRET")
+	var jwtSecret = []byte(secretKey)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256,jwt.MapClaims{
+		"username":username,
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
+	})
+	return token.SignedString(jwtSecret)
 }

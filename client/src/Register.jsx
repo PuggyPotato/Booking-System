@@ -27,7 +27,7 @@ function Register(){
             }
             const result = await response.json();
             console.log(result);
-            navigate("/Login");
+            navigate("/");
         }
         catch(err){
             console.log("Error Sending Data:",err)

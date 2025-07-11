@@ -5,6 +5,9 @@
 
 function Home(){
 
+    function checkLoggedIn(){
+        
+    }
 
 
     return(
