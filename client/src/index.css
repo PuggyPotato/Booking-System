@@ -82,3 +82,52 @@ body{
   padding-bottom:0.5em;
   border-radius: 3%;
 }
+
+
+#homeContainer,#appointment,#walkIn{
+  font-size: clamp(1rem, 2vw, 2rem);
+}
+
+#appointment,#walkIn{
+  padding: 20px;
+  margin: 30px;
+}
+
+#homeContainer{
+  display: flex;
+  flex-direction: column;
+  width: 50vw;
+  height: 50vh;
+  flex-wrap: 1;
+}
+
+#navBar{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  border: 2px solid black;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+#home{
+  margin-left: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+#logOut{
+  margin-right: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+
